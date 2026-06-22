@@ -1,0 +1,15 @@
+.venv/
+.DS_Store
+__pycache__/
+node_modules/
+logs/
+.arduino/
+build/
+dist/
+tmp/
+docs/superpowers/
+scripts/.build/
+third_party/lvgl/
+ESP32-S3-Touch-LCD-1.85-Demo.zip
+Firmware/*.bin
+ReadMe.txt

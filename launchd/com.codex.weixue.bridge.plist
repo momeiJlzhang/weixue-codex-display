@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.codex.weixue.bridge</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/REPLACE_WITH_REPO_PATH/dist/CodexStatusMenu.app/Contents/MacOS/CodexStatusMenu</string>
+    <string>--state-file</string>
+    <string>/REPLACE_WITH_HOME/Library/Application Support/weixue-codex-bridge/state/codex-status-menu-state.json</string>
+    <string>--config-file</string>
+    <string>/REPLACE_WITH_HOME/Library/Application Support/weixue-codex-bridge/config/codex-status-menu-config.json</string>
+    <string>--ble-name</string>
+    <string>CodexStatusDisplay</string>
+    <string>--node</string>
+    <string>/REPLACE_WITH_NODE_BIN</string>
+    <string>--bridge-script</string>
+    <string>/REPLACE_WITH_REPO_PATH/dist/CodexStatusMenu.app/Contents/Resources/codex-usage-bridge.js</string>
+    <string>--port</string>
+    <string>/dev/cu.usbmodem1401</string>
+    <string>--baud</string>
+    <string>115200</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>CODEX_BLE_NAME</key>
+    <string>CodexStatusDisplay</string>
+    <key>CODEX_BLE_SERVICE_UUID</key>
+    <string>6e400001-b5a3-f393-e0a9-e50e24dcca9e</string>
+    <key>CODEX_BLE_WRITE_CHAR_UUID</key>
+    <string>6e400002-b5a3-f393-e0a9-e50e24dcca9e</string>
+    <key>CODEX_BLE_DEVICE_ID</key>
+    <string></string>
+    <key>CODEX_NODE_BIN</key>
+    <string>/REPLACE_WITH_NODE_BIN</string>
+    <key>CODEX_PORT</key>
+    <string>/dev/cu.usbmodem1401</string>
+  </dict>
+  <key>WorkingDirectory</key>
+  <string>/REPLACE_WITH_HOME/Library/Application Support/weixue-codex-bridge</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <dict>
+    <key>Crashed</key>
+    <true/>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>/REPLACE_WITH_HOME/Library/Application Support/weixue-codex-bridge/logs/bridge.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/REPLACE_WITH_HOME/Library/Application Support/weixue-codex-bridge/logs/bridge.log</string>
+</dict>
+</plist>
