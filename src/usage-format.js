@@ -1,8 +1,6 @@
 const path = require('node:path');
 const MAX_PAGE_ITEMS = 9;
 const MAX_SCHEDULE_ITEMS = 9;
-const SCHEDULE_VISIBLE_ROWS_WITH_FEATURE = 4;
-const SCHEDULE_VISIBLE_ROWS_WITHOUT_FEATURE = 5;
 const UPCOMING_SCHEDULE_HIGHLIGHT_MS = 15 * 60 * 1000;
 
 function clampPercent(value) {
@@ -649,16 +647,8 @@ function tomorrowCountItem(count) {
   };
 }
 
-function isFeaturedScheduleItem(item) {
-  return item?.label === '当前' || item?.label === '即将';
-}
-
 function shouldAppendTomorrowCount(items, tomorrowCount) {
-  if (!tomorrowCount) return false;
-  const hasFeatured = isFeaturedScheduleItem(items[0]);
-  const listStart = hasFeatured ? 1 : 0;
-  const visibleRows = hasFeatured ? SCHEDULE_VISIBLE_ROWS_WITH_FEATURE : SCHEDULE_VISIBLE_ROWS_WITHOUT_FEATURE;
-  return Math.max(0, items.length - listStart) >= visibleRows;
+  return tomorrowCount > 0 && items.length < MAX_SCHEDULE_ITEMS;
 }
 
 function summarizeSchedule(events = [], options = {}) {

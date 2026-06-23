@@ -306,7 +306,7 @@ test('highlights next Feishu schedule when it starts within fifteen minutes', ()
   );
 });
 
-test('does not show tomorrow count on the first schedule screen when today fits', () => {
+test('shows tomorrow count without promoting tomorrow event when today fits', () => {
   const nowMs = Date.parse('2026-06-18T10:15:00+08:00');
   const schedule = summarizeSchedule([
     {
@@ -330,6 +330,7 @@ test('does not show tomorrow count on the first schedule screen when today fits'
   assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
     ['work', '当前', '当前同步会议', '10:00-10:30'],
     ['check', '下一个', '下午产品评审', '14:00-15:00'],
+    ['idle', '明日', '明日 1 条', '次日日程'],
   ]);
 });
 
@@ -352,6 +353,7 @@ test('does not promote tomorrow event as next while today event is current', () 
   assert.equal(schedule.todayRemainingCount, 1);
   assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
     ['work', '当前', '晚间同步', '20:00-21:00'],
+    ['idle', '明日', '明日 1 条', '次日日程'],
   ]);
 });
 
