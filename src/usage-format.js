@@ -1,6 +1,8 @@
 const path = require('node:path');
 const MAX_PAGE_ITEMS = 9;
 const MAX_SCHEDULE_ITEMS = 9;
+const SCHEDULE_VISIBLE_ROWS_WITH_FEATURE = 4;
+const SCHEDULE_VISIBLE_ROWS_WITHOUT_FEATURE = 5;
 const UPCOMING_SCHEDULE_HIGHLIGHT_MS = 15 * 60 * 1000;
 
 function clampPercent(value) {
@@ -647,6 +649,18 @@ function tomorrowCountItem(count) {
   };
 }
 
+function isFeaturedScheduleItem(item) {
+  return item?.label === '当前' || item?.label === '即将';
+}
+
+function shouldAppendTomorrowCount(items, tomorrowCount) {
+  if (!tomorrowCount) return false;
+  const hasFeatured = isFeaturedScheduleItem(items[0]);
+  const listStart = hasFeatured ? 1 : 0;
+  const visibleRows = hasFeatured ? SCHEDULE_VISIBLE_ROWS_WITH_FEATURE : SCHEDULE_VISIBLE_ROWS_WITHOUT_FEATURE;
+  return Math.max(0, items.length - listStart) >= visibleRows;
+}
+
 function summarizeSchedule(events = [], options = {}) {
   const nowMs = Number(options.nowMs || Date.now());
   const normalized = (Array.isArray(events) ? events : [])
@@ -659,15 +673,15 @@ function summarizeSchedule(events = [], options = {}) {
   const next = normalized.find((event) => event.startMs > nowMs) || null;
   const todayAllEvents = normalized.filter((event) => event.dateKey === todayKey);
   const todayEvents = todayAllEvents.filter((event) => event.endMs > nowMs);
+  const todayNext = todayEvents.find((event) => event.startMs > nowMs) || null;
   const tomorrowEvents = normalized.filter((event) => event.dateKey === tomorrowKey);
   const todayTotalCount = todayAllEvents.length;
   const todayStartedCount = todayAllEvents.filter((event) => event.startMs <= nowMs).length;
   const todayRemainingCount = todayEvents.length;
   const upcoming = !current
-    && next
-    && next.dateKey === todayKey
-    && next.startMs - nowMs <= UPCOMING_SCHEDULE_HIGHLIGHT_MS
-    ? next
+    && todayNext
+    && todayNext.startMs - nowMs <= UPCOMING_SCHEDULE_HIGHLIGHT_MS
+    ? todayNext
     : null;
   const items = [];
 
@@ -676,18 +690,20 @@ function summarizeSchedule(events = [], options = {}) {
   }
   if (upcoming) {
     items.push(scheduleItem('check', '即将', upcoming));
-  } else if (next && todayRemainingCount > 0 && (!current || next.startMs !== current.startMs)) {
-    items.push(scheduleItem(current ? 'check' : 'check', current ? '下一个' : '下一个', next));
+  } else if (todayNext && todayRemainingCount > 0 && (!current || todayNext.startMs !== current.startMs)) {
+    items.push(scheduleItem('check', '下一个', todayNext));
   }
 
   if (todayRemainingCount > 0) {
-    const todayItemLimit = MAX_SCHEDULE_ITEMS - 1;
+    const todayItemLimit = tomorrowEvents.length > 0 ? MAX_SCHEDULE_ITEMS - 1 : MAX_SCHEDULE_ITEMS;
     for (const event of todayEvents) {
       if (items.some((item) => item.title === event.title && item.meta === event.time)) continue;
       if (items.length >= todayItemLimit) break;
       items.push(scheduleItem('idle', `待办 ${items.length + 1}`, event));
     }
-    items.push(tomorrowCountItem(tomorrowEvents.length));
+    if (shouldAppendTomorrowCount(items, tomorrowEvents.length)) {
+      items.push(tomorrowCountItem(tomorrowEvents.length));
+    }
   } else {
     let tomorrowIndex = 1;
     for (const event of tomorrowEvents) {
@@ -702,8 +718,8 @@ function summarizeSchedule(events = [], options = {}) {
     summary = `当前 ${current.title} · 今日剩余 ${todayRemainingCount} 条`;
   } else if (upcoming) {
     summary = `即将 ${upcoming.title} · 今日剩余 ${todayRemainingCount} 条`;
-  } else if (todayRemainingCount > 0 && next) {
-    summary = `下一个 ${next.title} · 今日剩余 ${todayRemainingCount} 条`;
+  } else if (todayRemainingCount > 0 && todayNext) {
+    summary = `下一个 ${todayNext.title} · 今日剩余 ${todayRemainingCount} 条`;
   } else if (tomorrowEvents.length > 0) {
     summary = `今日无日程 · 明日 ${tomorrowEvents.length} 条`;
   } else if (normalized.length > 0) {

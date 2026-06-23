@@ -275,7 +275,6 @@ test('summarizes Feishu schedule with current next and today list', () => {
   assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
     ['work', '当前', '当前同步会议', '10:00-10:30'],
     ['check', '下一个', '下午产品评审', '14:00-15:00'],
-    ['idle', '明日', '明日 0 条', '次日日程'],
   ]);
 });
 
@@ -300,12 +299,60 @@ test('highlights next Feishu schedule when it starts within fifteen minutes', ()
   assert.equal(schedule.summary, '即将 马上开始的评审 · 今日剩余 1 条');
   assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
     ['check', '即将', '马上开始的评审', '14:00-15:00'],
-    ['idle', '明日', '明日 0 条', '次日日程'],
   ]);
   assert.equal(
     lines[0],
-    'PAGE|schedule|飞书日程|日程进度：1/2|check,即将,马上开始的评审,14:00-15:00|idle,明日,明日 0 条,次日日程',
+    'PAGE|schedule|飞书日程|日程进度：1/2|check,即将,马上开始的评审,14:00-15:00',
   );
+});
+
+test('does not show tomorrow count on the first schedule screen when today fits', () => {
+  const nowMs = Date.parse('2026-06-18T10:15:00+08:00');
+  const schedule = summarizeSchedule([
+    {
+      summary: '当前同步会议',
+      start_time: { datetime: '2026-06-18T10:00:00+08:00' },
+      end_time: { datetime: '2026-06-18T10:30:00+08:00' },
+    },
+    {
+      summary: '下午产品评审',
+      start_time: { datetime: '2026-06-18T14:00:00+08:00' },
+      end_time: { datetime: '2026-06-18T15:00:00+08:00' },
+    },
+    {
+      summary: '明天站会',
+      start_time: { datetime: '2026-06-19T10:00:00+08:00' },
+      end_time: { datetime: '2026-06-19T10:30:00+08:00' },
+    },
+  ], { nowMs });
+
+  assert.equal(schedule.tomorrowEvents.length, 1);
+  assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
+    ['work', '当前', '当前同步会议', '10:00-10:30'],
+    ['check', '下一个', '下午产品评审', '14:00-15:00'],
+  ]);
+});
+
+test('does not promote tomorrow event as next while today event is current', () => {
+  const nowMs = Date.parse('2026-06-18T20:15:00+08:00');
+  const schedule = summarizeSchedule([
+    {
+      summary: '晚间同步',
+      start_time: { datetime: '2026-06-18T20:00:00+08:00' },
+      end_time: { datetime: '2026-06-18T21:00:00+08:00' },
+    },
+    {
+      summary: '明早站会',
+      start_time: { datetime: '2026-06-19T09:00:00+08:00' },
+      end_time: { datetime: '2026-06-19T10:00:00+08:00' },
+    },
+  ], { nowMs });
+
+  assert.equal(schedule.next.title, '明早站会');
+  assert.equal(schedule.todayRemainingCount, 1);
+  assert.deepEqual(schedule.items.map((item) => [item.state, item.label, item.title, item.meta]), [
+    ['work', '当前', '晚间同步', '20:00-21:00'],
+  ]);
 });
 
 test('adds tomorrow count at the end of a scrollable schedule list', () => {
@@ -422,7 +469,7 @@ test('builds schedule detail page line for firmware', () => {
   assert.equal(lines.length, 1);
   assert.equal(
     lines[0],
-    'PAGE|schedule|飞书日程|日程进度：0/1|check,下一个,很长很长很长很长很长的中文日程标题需要截断,14:00-15:00|idle,明日,明日 0 条,次日日程',
+    'PAGE|schedule|飞书日程|日程进度：0/1|check,下一个,很长很长很长很长很长的中文日程标题需要截断,14:00-15:00',
   );
   assert.ok(Buffer.byteLength(lines[0]) < 420);
 });
